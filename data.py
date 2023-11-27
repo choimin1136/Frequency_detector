@@ -30,9 +30,21 @@ def dct(img, n):
 
     return tempdata
 
-def get_data(allreal, allfake, batch_size, device):
+def get_data(allreal, allfake, batch_size, device, path):
 
     c = 0
+
+    # print(allreal)
+    # print(allreal)
+
+    # ------------------------------------
+    # 이미지 불러오고 데이터셋 정렬해줘야됨 이거 학습을 어떻게 시키는지 몰라도 데이터셋 구성 필요할듯
+    data_mx=min(len(allreal), len(allfake))
+    print(data_mx)
+    allreal=allreal[:data_mx]
+    allfake=allfake[:data_mx]
+    print(f'RealData:{len(allreal)},FakeData:{len(allfake)}')
+    print()
     random.shuffle(allreal)
     random.shuffle(allfake)
     while True:
@@ -49,7 +61,7 @@ def get_data(allreal, allfake, batch_size, device):
             label = []
             for i in allrealtemp:
 
-                img0 = np.array(cv2.imread("real/"+i))
+                img0 = np.array(cv2.imread(path[0]+'/'+i))
                 for img in [img0, cv2.GaussianBlur(img0, (3, 3), 0), cv2.GaussianBlur(img0, (5, 5), 0)]:
                     img = cv2.resize(img, (299, 299))
 
@@ -75,7 +87,7 @@ def get_data(allreal, allfake, batch_size, device):
                     label.append(0)
 
             for i in allfaketemp:
-                img0 = np.array(cv2.imread("fake/"+i))
+                img0 = np.array(cv2.imread(path[1]+'/'+i))
                 for img in [img0, cv2.GaussianBlur(img0, (3, 3), 0), cv2.GaussianBlur(img0, (5, 5), 0)]:
                     img = cv2.resize(img, (299, 299))
                     newimg = np.zeros_like(img)
@@ -99,16 +111,18 @@ def get_data(allreal, allfake, batch_size, device):
 
                     label.append(1)
 
-            X1 = torch.tensor(np.array(data1, dtype=np.float),
+            X1 = torch.tensor(np.array(data1, dtype=np.float32),
                               device=device).float()
-            X2 = torch.tensor(np.array(data2, dtype=np.float),
+            X2 = torch.tensor(np.array(data2, dtype=np.float32),
                               device=device).float()
-            X3 = torch.tensor(np.array(data3, dtype=np.float),
+            X3 = torch.tensor(np.array(data3, dtype=np.float32),
                               device=device).float()
-            X4 = torch.tensor(np.array(data4, dtype=np.float),
+            X4 = torch.tensor(np.array(data4, dtype=np.float32),
                               device=device).float()
 
-            y = torch.tensor(np.array(label, dtype=np.float),
+            y = torch.tensor(np.array(label, dtype=np.float32),
                              device=device).long()
             c += 1
             yield X1, X2, X3, X4, y, imgs
+        else:
+            break
