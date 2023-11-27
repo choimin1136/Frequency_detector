@@ -21,7 +21,7 @@ import math
 
 model = XCE4_Net()
 
-model.load_state_dict(torch.load("pretrained.pth"))# 见 release
+model.load_state_dict(torch.load("train_model\\best_0_detector_1.000000.pth"))# 见 release
 model.eval()
 
 model.cuda()
@@ -61,7 +61,8 @@ def plot_result(video_path):
         _, img = reader.read()
         if img is None:
             break
-        cv2.imshow('img',img)
+        # cv2.imshow('img',img)
+        origin=img
 
         # img = cv2.imread(image)
         # print(image.shape)
@@ -153,15 +154,20 @@ def plot_result(video_path):
             # plt.show()
             avg_l.append(round(nn.Softmax(dim=1)(model(data1, data2, data3,data4))[0][1].item(),3))
             avg=round(sum(avg_l)/len(avg_l),3)
-            color=(0,255,0) if avg >=0.5 else (0,0,255)
+            color=(0,255,0) if avg <=0.5 else (0,0,255)
+            text='real:' if avg <=0.5 else 'fake:'
 
-            cv2.putText(img,str(nn.Softmax(dim=1)(model(data1, data2, data3,data4))[0][0].item()),(0,30),cv2.FONT_HERSHEY_SIMPLEX,0.5,(0,0,255),2)
-            cv2.putText(img,str(nn.Softmax(dim=1)(model(data1, data2, data3,data4))[0][1].item()),(0,15),cv2.FONT_HERSHEY_SIMPLEX,0.5,(0,255,0),2)
-            cv2.putText(img,'AVG='+str(avg),(0,img.shape[1]-10),cv2.FONT_HERSHEY_SIMPLEX,0.8,color,2)
+            cv2.putText(origin,str(nn.Softmax(dim=1)(model(data1, data2, data3,data4))[0][0].item()),(0,30),cv2.FONT_HERSHEY_SIMPLEX,0.5,(0,0,255),2)
+            cv2.putText(origin,str(nn.Softmax(dim=1)(model(data1, data2, data3,data4))[0][1].item()),(0,15),cv2.FONT_HERSHEY_SIMPLEX,0.5,(0,255,0),2)
+
+            cv2.rectangle(origin,(np.maximum(x-10,0),np.maximum(y-10,0)),(np.maximum(x+135,0),np.maximum(y+20,0)),color=color,thickness=-1)
+            cv2.putText(origin,text+str(avg),(np.maximum(x-5,0),np.maximum(y+15,0)),cv2.FONT_HERSHEY_SIMPLEX,0.8,(255,255,255),1)
             cv2.imshow('a',res)
-            cv2.imshow('origin',img)
+            cv2.rectangle(origin,(np.maximum(x-10,0),np.maximum(y-10,0)),(r+10,b+10),color=color)
+        
+            cv2.imshow('origin',origin)
             cv2.waitKey(33)
-
+ 
         else:
             continue
     pbar.close()
@@ -169,4 +175,4 @@ def plot_result(video_path):
     plt.savefig("output6.png")
 if __name__ == "__main__":
     # plot_result("2.png")
-    plot_result("videos/real02.mp4")
+    plot_result("videos/c.mp4")
